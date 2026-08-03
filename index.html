@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #display {
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+
+        #display::-webkit-scrollbar {
+            display: none;
+        }
+
+        button {
+            transition: 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 flex justify-center items-center min-h-screen p-4">
+
+<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+
+    <h1 class="text-2xl font-bold text-center mb-5">
+        Simple Calculator
+    </h1>
+
+<div id="history"
+class="text-right text-sm text-gray-500 mb-2 h-8 overflow-hidden">
+</div>
+
+    <div
+        id="display"
+        class="bg-gray-900 text-white text-right text-4xl rounded-lg p-4 mb-5 h-20 flex items-center justify-end">
+        0
+    </div>
+
+    <div class="grid grid-cols-4 gap-3">
+
+        <button class="clear bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg py-4">
+            C
+        </button>
+
+        <button class="delete bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg py-4">
+            ⌫
+        </button>
+
+        <button class="operator bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg py-4">
+            /
+        </button>
+
+        <button class="operator bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg py-4">
+            *
+        </button>
+
+       
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            7
+        </button>
+
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            8
+        </button>
+
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            9
+        </button>
+
+        <button class="operator bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg py-4">
+            -
+        </button>
+
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            4
+        </button>
+
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            5
+        </button>
+
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            6
+        </button>
+
+        <button class="operator bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg py-4">
+            +
+        </button>
+
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            1
+        </button>
+
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            2
+        </button>
+
+        <button class="number bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            3
+        </button>
+
+        <button
+            class="equals row-span-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg py-4">
+            =
+        </button>
+
+        <!-- Row 5 -->
+        <button class="number col-span-2 bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            0
+        </button>
+
+        <button class="decimal bg-gray-200 hover:bg-gray-300 rounded-lg py-4">
+            .
+        </button>
+        <button class="percent bg-purple-500 text-white rounded-lg py-4">
+        %
+        </button>
+        <button class="plusMinus bg-purple-500 text-white rounded-lg py-4">
+±
+        </button>
+    </div>
+
+</div>
+
+<script>
+const display = document.getElementById("display");
+
+let currentInput = "";
+let firstNumber = null;
+let operator = null;
+let waitingForSecondNumber = false;
+let justCalculated = false;
+
+function updateDisplay(value) {
+    display.textContent = value === "" ? "0" : value;
+}
+
+// Perform calculation
+function calculate(num1, num2, op) {
+    switch (op) {
+        case "+":
+            return num1 + num2;
+
+        case "-":
+            return num1 - num2;
+
+        case "*":
+            return num1 * num2;
+
+        case "/":
+            if (num2 === 0) {
+                return "Error";
+            }
+            return num1 / num2;
+
+        default:
+            return num2;
+    }
+}
+
+// Number buttons
+document.querySelectorAll(".number").forEach(button => {
+    button.addEventListener("click", () => {
+        const value = button.textContent.trim();
+
+        // Start new calculation after equals
+        if (justCalculated) {
+            currentInput = "";
+            firstNumber = null;
+            operator = null;
+            justCalculated = false;
+        }
+
+        if (waitingForSecondNumber) {
+            currentInput = "";
+            waitingForSecondNumber = false;
+        }
+
+        currentInput += value;
+        updateDisplay(currentInput);
+    });
+});
+
+// Decimal button
+document.querySelector(".decimal").addEventListener("click", () => {
+
+    if (justCalculated) {
+        currentInput = "";
+        firstNumber = null;
+        operator = null;
+        justCalculated = false;
+    }
+
+    if (waitingForSecondNumber) {
+        currentInput = "0";
+        waitingForSecondNumber = false;
+    }
+
+    if (!currentInput.includes(".")) {
+        if (currentInput === "") {
+            currentInput = "0";
+        }
+
+        currentInput += ".";
+        updateDisplay(currentInput);
+    }
+});
+
+// Operator buttons
+document.querySelectorAll(".operator").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        const selectedOperator = button.textContent.trim();
+
+        // Ignore operator if no number has been entered
+        if (currentInput === "" && firstNumber === null) {
+            return;
+        }
+
+        // Replace operator if pressed repeatedly
+        if (waitingForSecondNumber) {
+            operator = selectedOperator;
+            return;
+        }
+
+        if (firstNumber === null) {
+
+            firstNumber = Number(currentInput);
+
+        } else {
+
+            let result = calculate(
+                firstNumber,
+                Number(currentInput),
+                operator
+            );
+
+            if (result === "Error") {
+
+                updateDisplay("Error");
+
+                currentInput = "";
+                firstNumber = null;
+                operator = null;
+                waitingForSecondNumber = false;
+                justCalculated = true;
+
+                return;
+            }
+
+            firstNumber = result;
+
+            updateDisplay(result);
+
+            currentInput = result.toString();
+        }
+
+        operator = selectedOperator;
+        waitingForSecondNumber = true;
+        justCalculated = false;
+
+    });
+
+});
+
+// Equals button
+document.querySelector(".equals").addEventListener("click", () => {
+
+    if (
+        operator === null ||
+        waitingForSecondNumber ||
+        currentInput === ""
+    ) {
+        return;
+    }
+
+    let result = calculate(
+        firstNumber,
+        Number(currentInput),
+        operator
+    );
+
+    if (result === "Error") {
+
+        updateDisplay("Error");
+
+        currentInput = "";
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = false;
+        justCalculated = true;
+
+        return;
+    }
+
+    result = Number(result.toFixed(10));
+
+    updateDisplay(result);
+
+    currentInput = result.toString();
+
+    firstNumber = result;
+
+    operator = null;
+
+    waitingForSecondNumber = false;
+
+    justCalculated = true;
+
+});
+
+// Clear
+document.querySelector(".clear").addEventListener("click", () => {
+
+    currentInput = "";
+    firstNumber = null;
+    operator = null;
+    waitingForSecondNumber = false;
+    justCalculated = false;
+
+    updateDisplay("");
+
+});
+
+// Delete
+document.querySelector(".delete").addEventListener("click", () => {
+
+    if (justCalculated) return;
+
+    if (waitingForSecondNumber) return;
+
+    currentInput = currentInput.slice(0, -1);
+
+    updateDisplay(currentInput);
+
+});
+
+updateDisplay("");
+</script>
+
+</body>
+</html>
